@@ -9,95 +9,143 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: #0f1117;
+    background: #0d0f14;
     color: #e0e0e0;
     min-height: 100vh;
   }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #3a3d4a; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #6c7ae0; }
 
   .header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 24px;
-    background: #161822;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #161822 0%, #1a1e2e 100%);
     border-bottom: 1px solid #2a2d3a;
   }
   .header h1 {
-    font-size: 20px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: -0.3px;
+  }
+  .header h1 .logo {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #6c7ae0, #48bfe3);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
     color: #fff;
   }
   .header-controls {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     align-items: center;
+    flex-wrap: wrap;
+  }
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .control-group label {
+    font-size: 10px;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
   }
 
   select, button {
-    background: #1e2030;
-    color: #e0e0e0;
-    border: 1px solid #3a3d4a;
-    padding: 8px 14px;
+    background: #1a1e2e;
+    color: #ccc;
+    border: 1px solid #2e3248;
+    padding: 6px 10px;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
-    transition: border-color .2s;
+    transition: border-color .2s, background .2s;
   }
-  select:hover, button:hover { border-color: #6c7ae0; }
+  select:hover, button:hover { border-color: #6c7ae0; background: #1e2236; }
+  select:focus, button:focus { outline: none; border-color: #6c7ae0; box-shadow: 0 0 0 2px rgba(108,122,224,0.15); }
   button.primary {
-    background: #6c7ae0;
-    border-color: #6c7ae0;
+    background: linear-gradient(135deg, #6c7ae0, #5a68d0);
+    border-color: transparent;
     color: #fff;
     font-weight: 600;
+    padding: 6px 16px;
   }
-  button.primary:hover { background: #5a68d0; }
+  button.primary:hover { background: linear-gradient(135deg, #7b88e8, #6876e0); }
 
   .upload-zone {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: calc(100vh - 65px);
+    height: calc(100vh - 57px);
     gap: 16px;
   }
   .upload-zone .drop-area {
-    border: 2px dashed #3a3d4a;
-    border-radius: 12px;
+    border: 2px dashed #2e3248;
+    border-radius: 16px;
     padding: 60px 80px;
     text-align: center;
     cursor: pointer;
-    transition: border-color .2s, background .2s;
+    transition: border-color .3s, background .3s, transform .2s;
   }
   .upload-zone .drop-area:hover,
   .upload-zone .drop-area.dragover {
     border-color: #6c7ae0;
-    background: rgba(108, 122, 224, 0.06);
+    background: rgba(108, 122, 224, 0.04);
+    transform: scale(1.01);
   }
-  .drop-area h2 { font-size: 18px; margin-bottom: 8px; color: #aaa; font-weight: 500; }
-  .drop-area p { font-size: 13px; color: #666; }
+  .drop-area .drop-icon {
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+  .drop-area h2 { font-size: 17px; margin-bottom: 6px; color: #999; font-weight: 500; }
+  .drop-area p { font-size: 12px; color: #555; }
 
   .stats-bar {
     display: flex;
-    gap: 24px;
-    padding: 12px 24px;
-    background: #161822;
-    border-bottom: 1px solid #2a2d3a;
-    font-size: 13px;
+    gap: 4px;
+    padding: 8px 24px;
+    background: #12141c;
+    border-bottom: 1px solid #1e2030;
+    font-size: 12px;
+    flex-wrap: wrap;
   }
-  .stats-bar .stat { display: flex; gap: 6px; }
-  .stats-bar .stat-label { color: #888; }
-  .stats-bar .stat-value { color: #fff; font-weight: 600; }
+  .stats-bar .stat {
+    display: flex;
+    gap: 6px;
+    padding: 4px 12px;
+    background: #1a1e2e;
+    border-radius: 6px;
+    border: 1px solid #232640;
+  }
+  .stats-bar .stat-label { color: #666; font-weight: 500; }
+  .stats-bar .stat-value { color: #ccc; font-weight: 600; }
 
   .main-content {
     display: none;
     flex-direction: column;
-    height: calc(100vh - 65px);
+    height: calc(100vh - 57px);
   }
   .main-content.visible { display: flex; }
 
   .chart-wrapper {
     flex: 1;
-    padding: 16px 24px;
+    padding: 12px 20px;
     min-height: 0;
     position: relative;
   }
@@ -109,27 +157,31 @@
   .legend-panel {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 16px;
-    padding: 12px 24px;
-    background: #161822;
-    border-top: 1px solid #2a2d3a;
-    max-height: 180px;
+    gap: 4px 10px;
+    padding: 10px 24px;
+    background: #12141c;
+    border-top: 1px solid #1e2030;
+    max-height: 160px;
     overflow-y: auto;
   }
   .legend-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 12px;
+    gap: 5px;
+    font-size: 11px;
     cursor: pointer;
     user-select: none;
     opacity: 1;
     transition: opacity .2s;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.02);
   }
-  .legend-item.hidden { opacity: 0.3; }
+  .legend-item:hover { background: rgba(108,122,224,0.08); }
+  .legend-item.hidden { opacity: 0.25; }
   .legend-swatch {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 2px;
     flex-shrink: 0;
   }
@@ -137,41 +189,49 @@
   .custom-tooltip {
     position: absolute;
     pointer-events: none;
-    background: #1e2030;
-    border: 1px solid #3a3d4a;
-    border-radius: 8px;
-    padding: 10px 14px;
+    background: #181c28;
+    border: 1px solid #2e3248;
+    border-radius: 10px;
+    padding: 12px 16px;
     font-size: 12px;
     z-index: 100;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
     display: none;
+    backdrop-filter: blur(4px);
+    min-width: 220px;
   }
   .custom-tooltip .tt-title {
     font-weight: 600;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     color: #fff;
     font-size: 13px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #2a2d3a;
   }
   .custom-tooltip .tt-row {
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 1px 0;
+    padding: 2px 0;
   }
   .custom-tooltip .tt-swatch {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 2px;
     flex-shrink: 0;
   }
-  .custom-tooltip .tt-label { color: #ccc; }
-  .custom-tooltip .tt-value { margin-left: auto; color: #fff; font-weight: 600; padding-left: 12px; }
+  .custom-tooltip .tt-label { color: #aaa; font-size: 11px; }
+  .custom-tooltip .tt-value { margin-left: auto; color: #ddd; font-weight: 600; padding-left: 12px; white-space: nowrap; font-size: 11px; }
+  .custom-tooltip .tt-size { color: #6c7ae0; font-size: 10px; font-weight: 500; margin-left: 4px; }
   .custom-tooltip .tt-total {
-    border-top: 1px solid #3a3d4a;
-    margin-top: 6px;
-    padding-top: 6px;
+    border-top: 1px solid #2a2d3a;
+    margin-top: 8px;
+    padding-top: 8px;
     font-weight: 600;
     color: #fff;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
   }
 
   #fileInput { display: none; }
@@ -182,36 +242,36 @@
     display: flex;
     gap: 0;
     padding: 0 24px;
-    background: #161822;
-    border-bottom: 1px solid #2a2d3a;
+    background: #12141c;
+    border-bottom: 1px solid #1e2030;
   }
   .tab {
-    padding: 10px 20px;
-    font-size: 13px;
+    padding: 9px 18px;
+    font-size: 12px;
     font-weight: 500;
-    color: #888;
+    color: #666;
     cursor: pointer;
     border-bottom: 2px solid transparent;
     transition: color .2s, border-color .2s;
     user-select: none;
   }
-  .tab:hover { color: #ccc; }
+  .tab:hover { color: #aaa; }
   .tab.active { color: #fff; border-bottom-color: #6c7ae0; }
 
   .time-range-bar {
-    padding: 10px 24px 14px;
-    background: #161822;
-    border-bottom: 1px solid #2a2d3a;
+    padding: 8px 24px 12px;
+    background: #12141c;
+    border-bottom: 1px solid #1e2030;
   }
   .time-range-labels {
     display: flex;
     justify-content: space-between;
-    font-size: 12px;
+    font-size: 11px;
     margin-bottom: 6px;
   }
-  .time-range-labels .tr-start { color: #6c7ae0; }
-  .time-range-labels .tr-end { color: #6c7ae0; }
-  .time-range-labels .tr-full { color: #555; }
+  .time-range-labels .tr-start { color: #6c7ae0; font-weight: 600; }
+  .time-range-labels .tr-end { color: #6c7ae0; font-weight: 600; }
+  .time-range-labels .tr-full { color: #444; font-size: 10px; }
   .time-range-slider {
     position: relative;
     height: 28px;
@@ -231,89 +291,95 @@
   .time-range-slider input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    height: 18px;
-    width: 18px;
+    height: 16px;
+    width: 16px;
     border-radius: 50%;
     background: #6c7ae0;
     cursor: pointer;
     pointer-events: all;
-    border: 2px solid #0f1117;
+    border: 2px solid #0d0f14;
     position: relative;
     z-index: 2;
+    box-shadow: 0 0 6px rgba(108,122,224,0.3);
   }
   .time-range-slider input[type=range]::-moz-range-thumb {
-    height: 18px;
-    width: 18px;
+    height: 16px;
+    width: 16px;
     border-radius: 50%;
     background: #6c7ae0;
     cursor: pointer;
     pointer-events: all;
-    border: 2px solid #0f1117;
+    border: 2px solid #0d0f14;
   }
   .time-range-track {
     position: absolute;
-    height: 6px;
-    top: 10px;
-    background: #2a2d3a;
+    height: 4px;
+    top: 11px;
+    background: #1e2030;
     width: 100%;
-    border-radius: 3px;
+    border-radius: 2px;
   }
   .time-range-track .tr-fill {
     position: absolute;
     height: 100%;
-    background: #6c7ae0;
-    border-radius: 3px;
+    background: linear-gradient(90deg, #6c7ae0, #48bfe3);
+    border-radius: 2px;
   }
   .time-range-reset {
-    font-size: 11px;
+    font-size: 10px;
     color: #6c7ae0;
     cursor: pointer;
-    margin-left: 12px;
+    margin-left: 10px;
+    font-weight: 500;
   }
   .time-range-reset:hover { text-decoration: underline; }
 
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.7);
     z-index: 200;
     display: flex;
     align-items: center;
     justify-content: center;
+    backdrop-filter: blur(4px);
   }
   .modal {
-    background: #1e2030;
-    border: 1px solid #3a3d4a;
-    border-radius: 12px;
+    background: #181c28;
+    border: 1px solid #2e3248;
+    border-radius: 14px;
     padding: 20px 24px;
-    min-width: 360px;
-    max-width: 520px;
+    min-width: 400px;
+    max-width: 560px;
     max-height: 80vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    box-shadow: 0 16px 64px rgba(0,0,0,0.6);
   }
   .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2a2d3a;
   }
   .modal-header h3 {
-    font-size: 15px;
+    font-size: 14px;
     color: #fff;
     font-weight: 600;
   }
   .modal-close {
-    background: none;
-    border: none;
+    background: #1e2236;
+    border: 1px solid #2e3248;
     color: #888;
-    font-size: 20px;
+    font-size: 16px;
     cursor: pointer;
-    padding: 0 4px;
+    padding: 2px 8px;
     line-height: 1;
+    border-radius: 6px;
   }
-  .modal-close:hover { color: #fff; }
+  .modal-close:hover { color: #fff; background: #2a2d3a; }
   .modal-body {
     overflow-y: auto;
     flex: 1;
@@ -322,25 +388,31 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 3px 0;
-    font-size: 13px;
+    padding: 5px 8px;
+    font-size: 12px;
+    border-radius: 4px;
+    transition: background .15s;
   }
+  .modal-row:hover { background: rgba(108,122,224,0.05); }
+  .modal-row:nth-child(even) { background: rgba(255,255,255,0.015); }
+  .modal-row:nth-child(even):hover { background: rgba(108,122,224,0.05); }
   .modal-swatch {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 2px;
     flex-shrink: 0;
   }
-  .modal-label { color: #ccc; }
-  .modal-value { margin-left: auto; color: #fff; font-weight: 600; }
+  .modal-label { color: #bbb; font-size: 12px; }
+  .modal-value { margin-left: auto; color: #fff; font-weight: 600; font-size: 12px; white-space: nowrap; }
   .modal-total {
-    border-top: 1px solid #3a3d4a;
-    margin-top: 8px;
-    padding-top: 8px;
+    border-top: 1px solid #2a2d3a;
+    margin-top: 10px;
+    padding-top: 10px;
     font-weight: 600;
     color: #fff;
-    font-size: 14px;
-    text-align: right;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
   }
 
   .chart-wrapper canvas { cursor: crosshair; }
@@ -349,30 +421,46 @@
 <body>
 
 <div class="header">
-  <h1>Packet Logger</h1>
+  <h1><span class="logo">PL</span>Packet Logger</h1>
   <div class="header-controls">
-    <select id="sortMode">
-      <option value="count">Sort by Packet Count</option>
-      <option value="name">Sort by Name</option>
-    </select>
-    <select id="intervalMode">
-      <option value="50">Per 50ms</option>
-      <option value="100">Per 100ms</option>
-      <option value="250">Per 250ms</option>
-      <option value="500">Per 500ms</option>
-      <option value="1000">Per 1s</option>
-      <option value="5000">Per 5s</option>
-      <option value="10000">Per 10s</option>
-      <option value="30000">Per 30s</option>
-      <option value="60000" selected>Per Minute</option>
-      <option value="300000">Per 5 Minutes</option>
-    </select>
-    <select id="maxTypes">
-      <option value="15">Top 15 Types</option>
-      <option value="25" selected>Top 25 Types</option>
-      <option value="40">Top 40 Types</option>
-      <option value="0">All Types</option>
-    </select>
+    <div class="control-group">
+      <label>Sortierung</label>
+      <select id="sortMode">
+        <option value="count">Nach Anzahl</option>
+        <option value="name">Nach Name</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Intervall</label>
+      <select id="intervalMode">
+        <option value="50">50ms</option>
+        <option value="100">100ms</option>
+        <option value="250">250ms</option>
+        <option value="500">500ms</option>
+        <option value="1000">1s</option>
+        <option value="5000">5s</option>
+        <option value="10000">10s</option>
+        <option value="30000">30s</option>
+        <option value="60000" selected>1 Minute</option>
+        <option value="300000">5 Minuten</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Typen</label>
+      <select id="maxTypes">
+        <option value="15">Top 15</option>
+        <option value="25" selected>Top 25</option>
+        <option value="40">Top 40</option>
+        <option value="0">Alle</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Metrik</label>
+      <select id="chartMode">
+        <option value="count">Häufigkeit</option>
+        <option value="size">Größe (Bytes)</option>
+      </select>
+    </div>
     <button class="primary" id="loadBtn">JSON laden</button>
     <input type="file" id="fileInput" accept=".json">
   </div>
@@ -380,6 +468,13 @@
 
 <div class="upload-zone" id="uploadZone">
   <div class="drop-area" id="dropArea">
+    <div class="drop-icon">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6c7ae0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    </div>
     <h2>JSON Datei hierher ziehen</h2>
     <p>oder klicken zum Auswählen</p>
   </div>
@@ -433,6 +528,7 @@
   let lastTooltipData = null;  // store for modal
   let highlightedBarIndex = null;  // index of clicked bar
   let mouseX = 0, mouseY = 0;  // real mouse position relative to chart wrapper
+  let renderMeta = {};  // { typeTotalCounts, typeTotalSizes, typeCountBuckets, typeSizeBuckets }
 
   // ── DOM ──
   const fileInput = document.getElementById('fileInput');
@@ -457,6 +553,7 @@
   const sortMode = document.getElementById('sortMode');
   const intervalMode = document.getElementById('intervalMode');
   const maxTypesSelect = document.getElementById('maxTypes');
+  const chartModeSelect = document.getElementById('chartMode');
 
   loadBtn.addEventListener('click', () => fileInput.click());
   dropArea.addEventListener('click', () => fileInput.click());
@@ -484,6 +581,7 @@
   sortMode.addEventListener('change', () => { if (rawData.length) render(); });
   intervalMode.addEventListener('change', () => { if (rawData.length) render(); });
   maxTypesSelect.addEventListener('change', () => { if (rawData.length) render(); });
+  chartModeSelect.addEventListener('change', () => { if (rawData.length) render(); });
 
   // ── Debounce slider for performance ──
   let sliderRafId = null;
@@ -688,27 +786,39 @@
       labels[i] = formatTime(eBucketStart + i * effectiveInterval, effectiveInterval);
     }
 
-    // ── Count per type per bucket (sparse → dense) ──
-    const typeCounts = {};  // type -> total
+    // ── Count + Size per type per bucket (sparse → dense) ──
+    const useSize = chartModeSelect.value === 'size';
+    const typeCounts = {};  // type -> total count
+    const typeSizes = {};   // type -> total size
     const sparseBuckets = {};  // type -> Map(bucketIdx -> count)
+    const sparseSizeBuckets = {};  // type -> Map(bucketIdx -> size)
 
     for (let i = iStart; i < iEnd; i++) {
       const pkt = fullData[i];
       const type = pkt.type || 'UNKNOWN';
+      const sz = pkt.size || 0;
       if (!typeCounts[type]) {
         typeCounts[type] = 0;
+        typeSizes[type] = 0;
         sparseBuckets[type] = new Map();
+        sparseSizeBuckets[type] = new Map();
       }
       typeCounts[type]++;
+      typeSizes[type] += sz;
       const idx = Math.floor((pkt.timestamp - eBucketStart) / effectiveInterval);
       if (idx >= 0 && idx < numBuckets) {
         sparseBuckets[type].set(idx, (sparseBuckets[type].get(idx) || 0) + 1);
+        sparseSizeBuckets[type].set(idx, (sparseSizeBuckets[type].get(idx) || 0) + sz);
       }
     }
 
-    // ── Sort types ──
+    // ── Sort types (by active metric) ──
     let allTypes = Object.keys(typeCounts);
-    allTypes.sort((a, b) => typeCounts[b] - typeCounts[a]);
+    if (useSize) {
+      allTypes.sort((a, b) => typeSizes[b] - typeSizes[a]);
+    } else {
+      allTypes.sort((a, b) => typeCounts[b] - typeCounts[a]);
+    }
 
     // ── Group rare types into OTHER ──
     const maxTypes = parseInt(maxTypesSelect.value) || allTypes.length;
@@ -720,11 +830,17 @@
       } else {
         types = allTypes.slice(0, maxTypes);
         typeCounts['OTHER'] = 0;
+        typeSizes['OTHER'] = 0;
         sparseBuckets['OTHER'] = new Map();
+        sparseSizeBuckets['OTHER'] = new Map();
         for (const ot of otherTypes) {
           typeCounts['OTHER'] += typeCounts[ot];
+          typeSizes['OTHER'] += typeSizes[ot];
           for (const [idx, cnt] of sparseBuckets[ot]) {
             sparseBuckets['OTHER'].set(idx, (sparseBuckets['OTHER'].get(idx) || 0) + cnt);
+          }
+          for (const [idx, sz] of sparseSizeBuckets[ot]) {
+            sparseSizeBuckets['OTHER'].set(idx, (sparseSizeBuckets['OTHER'].get(idx) || 0) + sz);
           }
         }
         types.push('OTHER');
@@ -831,18 +947,15 @@
       legendEl.appendChild(collapseBtn);
     }
 
+    // ── Store render metadata for tooltip/modal ──
+    renderMeta = { typeTotalCounts: typeCounts, typeTotalSizes: typeSizes, typeCountBuckets: sparseBuckets, typeSizeBuckets: sparseSizeBuckets };
+
     // ── Chart datasets (sparse → dense only for visible types) ──
+    const activeSparse = useSize ? sparseSizeBuckets : sparseBuckets;
     const datasets = types.filter(t => !hiddenTypes.has(t)).map(type => {
-      const sparse = sparseBuckets[type];
-      let arr;
-      if (sparse.size < numBuckets * 0.3) {
-        // Sparse: use typed array, fill only set entries
-        arr = new Float64Array(numBuckets);
-        for (const [idx, cnt] of sparse) arr[idx] = cnt;
-      } else {
-        arr = new Float64Array(numBuckets);
-        for (const [idx, cnt] of sparse) arr[idx] = cnt;
-      }
+      const sparse = activeSparse[type];
+      const arr = new Float64Array(numBuckets);
+      if (sparse) for (const [idx, val] of sparse) arr[idx] = val;
       return {
         label: type,
         data: arr,
@@ -880,7 +993,7 @@
             beginAtZero: true,
             ticks: { color: '#888' },
             grid: { color: 'rgba(255,255,255,0.06)' },
-            title: { display: true, text: 'Total Packets', color: '#888' },
+            title: { display: true, text: useSize ? 'Total Bytes' : 'Total Packets', color: '#888' },
           },
         },
         interaction: { mode: 'index', intersect: false },
@@ -923,6 +1036,9 @@
     const idx = tooltip.dataPoints?.[0]?.dataIndex;
     if (idx == null) return;
 
+    const useSize = chartModeSelect.value === 'size';
+    const { typeCountBuckets, typeSizeBuckets } = renderMeta;
+
     const items = tooltip.dataPoints
       .filter(dp => dp.raw > 0)
       .sort((a, b) => b.raw - a.raw);
@@ -936,22 +1052,32 @@
     let html = `<div class="tt-title">${tooltip.title[0]}</div>`;
     for (const dp of visible) {
       const color = dp.dataset.backgroundColor;
+      const label = dp.dataset.label;
+      const cnt = (typeCountBuckets[label] && typeCountBuckets[label].get(idx)) || 0;
+      const sz = (typeSizeBuckets[label] && typeSizeBuckets[label].get(idx)) || 0;
       html += `<div class="tt-row">
         <div class="tt-swatch" style="background:${sanitize(color)}"></div>
-        <span class="tt-label">${sanitize(dp.dataset.label)}</span>
-        <span class="tt-value">${dp.raw.toLocaleString()}</span>
+        <span class="tt-label">${sanitize(label)}</span>
+        <span class="tt-value">${cnt.toLocaleString()}<span class="tt-size">${formatBytes(sz)}</span></span>
       </div>`;
     }
     if (remaining.length) {
-      html += `<div class="tt-row" style="color:#6c7ae0;cursor:pointer;font-style:italic" class="tt-expand">
+      html += `<div class="tt-row" style="color:#6c7ae0;font-style:italic">
         <span class="tt-label">... +${remaining.length} weitere — Klick für Details</span>
         <span class="tt-value">${remainingSum.toLocaleString()}</span>
       </div>`;
     }
-    html += `<div class="tt-total">Total: ${total.toLocaleString()}</div>`;
+    // Compute total count and size for this bucket
+    let totalCount = 0, totalSize = 0;
+    for (const dp of items) {
+      const l = dp.dataset.label;
+      totalCount += (typeCountBuckets[l] && typeCountBuckets[l].get(idx)) || 0;
+      totalSize += (typeSizeBuckets[l] && typeSizeBuckets[l].get(idx)) || 0;
+    }
+    html += `<div class="tt-total"><span>${totalCount.toLocaleString()} Pakete</span><span>${formatBytes(totalSize)}</span></div>`;
 
-    // Store data for modal
-    lastTooltipData = { title: tooltip.title[0], items, total };
+    // Store data for modal (with bucket index for lookup)
+    lastTooltipData = { title: tooltip.title[0], items, total, bucketIdx: idx };
 
     tooltipEl.innerHTML = html;
     tooltipEl.style.display = 'block';
@@ -1128,16 +1254,30 @@
     if (chart) chart.draw();
   });
 
+  function formatBytes(b) {
+    if (b === 0) return '0 B';
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    return (b / 1048576).toFixed(2) + ' MB';
+  }
+
   function openDetailModal(data) {
-    const { title, items, total } = data;
+    const { title, items, total, bucketIdx } = data;
+    const { typeCountBuckets, typeSizeBuckets } = renderMeta;
+    let totalCount = 0, totalSize = 0;
     let rows = '';
     for (const dp of items) {
       const color = dp.dataset.backgroundColor;
+      const label = dp.dataset.label;
+      const cnt = (typeCountBuckets[label] && typeCountBuckets[label].get(bucketIdx)) || 0;
+      const sz = (typeSizeBuckets[label] && typeSizeBuckets[label].get(bucketIdx)) || 0;
+      totalCount += cnt;
+      totalSize += sz;
       const pct = total > 0 ? ((dp.raw / total) * 100).toFixed(1) : '0.0';
       rows += `<div class="modal-row">
         <div class="modal-swatch" style="background:${sanitize(color)}"></div>
-        <span class="modal-label">${sanitize(dp.dataset.label)}</span>
-        <span class="modal-value">${dp.raw.toLocaleString()} <span style="color:#888;font-weight:400">(${pct}%)</span></span>
+        <span class="modal-label">${sanitize(label)}</span>
+        <span class="modal-value">${cnt.toLocaleString()} <span style="color:#6c7ae0;font-weight:500;font-size:11px">${formatBytes(sz)}</span> <span style="color:#555;font-weight:400;font-size:11px">${pct}%</span></span>
       </div>`;
     }
     modalContainer.innerHTML = `
@@ -1148,7 +1288,7 @@
             <button class="modal-close" id="modalClose">&times;</button>
           </div>
           <div class="modal-body">${rows}</div>
-          <div class="modal-total">Total: ${total.toLocaleString()}</div>
+          <div class="modal-total"><span>${totalCount.toLocaleString()} Pakete</span><span>${formatBytes(totalSize)}</span></div>
         </div>
       </div>`;
     document.getElementById('modalOverlay').addEventListener('click', (e) => {
