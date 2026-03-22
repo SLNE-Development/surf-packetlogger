@@ -461,7 +461,10 @@
         <option value="size">Größe (Bytes)</option>
       </select>
     </div>
-    <button class="primary" id="loadBtn">JSON laden</button>
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button class="primary" id="loadBtn">JSON laden</button>
+    </div>
     <input type="file" id="fileInput" accept=".json">
   </div>
 </div>
@@ -887,8 +890,8 @@
         item.innerHTML = `<div class="legend-swatch" style="background:${colorMap[type]}"></div><span>OTHER (${typeCounts[type].toLocaleString()})</span>`;
         item.style.cursor = 'pointer';
         item.addEventListener('click', (e) => {
-          if (e.shiftKey || e.ctrlKey) {
-            // Shift/Ctrl+Click = expand/collapse
+          if (e.ctrlKey) {
+            // Ctrl+Click on OTHER = expand
             expandOther = true;
             render();
           } else {
@@ -916,9 +919,17 @@
         item.style.paddingLeft = '8px';
         item.style.borderLeft = '2px solid #555';
         item.innerHTML = `<div class="legend-swatch" style="background:${colorMap[type]}"></div><span>${type} (${typeCounts[type].toLocaleString()})</span>`;
-        item.addEventListener('click', () => {
-          if (hiddenTypes.has(type)) hiddenTypes.delete(type);
-          else hiddenTypes.add(type);
+        item.addEventListener('click', (e) => {
+          if (e.ctrlKey) {
+            const isSolo = hiddenTypes.size === types.length - 1 && !hiddenTypes.has(type);
+            if (isSolo) { hiddenTypes.clear(); } else {
+              hiddenTypes.clear();
+              for (const t of types) { if (t !== type) hiddenTypes.add(t); }
+            }
+          } else {
+            if (hiddenTypes.has(type)) hiddenTypes.delete(type);
+            else hiddenTypes.add(type);
+          }
           render();
         });
         legendEl.appendChild(item);
@@ -926,9 +937,17 @@
         const item = document.createElement('div');
         item.className = 'legend-item' + (hiddenTypes.has(type) ? ' hidden' : '');
         item.innerHTML = `<div class="legend-swatch" style="background:${colorMap[type]}"></div><span>${type} (${typeCounts[type].toLocaleString()})</span>`;
-        item.addEventListener('click', () => {
-          if (hiddenTypes.has(type)) hiddenTypes.delete(type);
-          else hiddenTypes.add(type);
+        item.addEventListener('click', (e) => {
+          if (e.ctrlKey) {
+            const isSolo = hiddenTypes.size === types.length - 1 && !hiddenTypes.has(type);
+            if (isSolo) { hiddenTypes.clear(); } else {
+              hiddenTypes.clear();
+              for (const t of types) { if (t !== type) hiddenTypes.add(t); }
+            }
+          } else {
+            if (hiddenTypes.has(type)) hiddenTypes.delete(type);
+            else hiddenTypes.add(type);
+          }
           render();
         });
         legendEl.appendChild(item);
