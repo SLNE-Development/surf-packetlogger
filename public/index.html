@@ -859,6 +859,12 @@
       types = otherAtEnd;
     }
 
+    // ── Prune hiddenTypes: remove entries that don't exist in current types ──
+    const typeSet = new Set(types);
+    for (const h of [...hiddenTypes]) {
+      if (!typeSet.has(h)) hiddenTypes.delete(h);
+    }
+
     // ── Assign colors ──
     const colorMap = {};
     types.forEach((t, i) => {
