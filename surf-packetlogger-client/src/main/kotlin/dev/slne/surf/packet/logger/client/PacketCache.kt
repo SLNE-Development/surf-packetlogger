@@ -15,6 +15,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToStream
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.createFile
+import kotlin.io.path.createParentDirectories
 import kotlin.io.path.outputStream
 
 class PacketCache {
@@ -50,10 +51,11 @@ class PacketCache {
             receivedPackets = receiveEvents,
             sentPackets = sendEvents
         )
-        
+
         val file = PacketLoggerInstance.dataPath.resolve(PacketConfig.generateConfigName())
 
         withContext(Dispatchers.IO) {
+            file.createParentDirectories()
             file.createFile()
             file.outputStream().buffered().use { writer ->
                 Json.encodeToStream(config, writer)
