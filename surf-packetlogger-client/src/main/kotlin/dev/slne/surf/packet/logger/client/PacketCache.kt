@@ -4,9 +4,10 @@ package dev.slne.surf.packet.logger.client
 
 import com.github.retrooper.packetevents.event.PacketReceiveEvent
 import com.github.retrooper.packetevents.event.PacketSendEvent
+import com.github.retrooper.packetevents.event.ProtocolPacketEvent
+import com.github.retrooper.packetevents.netty.buffer.ByteBufHelper
 import dev.slne.surf.packet.logger.client.config.Packet
 import dev.slne.surf.packet.logger.client.config.PacketConfig
-import dev.slne.surf.surfapi.core.api.util.mutableObjectListOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -17,40 +18,39 @@ import kotlin.io.path.createFile
 import kotlin.io.path.outputStream
 
 class PacketCache {
-    private val sendEvents = ConcurrentHashMap.newKeySet<PacketSendEvent>()
-    private val receiveEvents = ConcurrentHashMap.newKeySet<PacketReceiveEvent>()
+    private val sendEvents = ConcurrentHashMap.newKeySet<Packet>(1_000_000)
+    private val receiveEvents = ConcurrentHashMap.newKeySet<Packet>(1_000_000)
+
+    private fun calculatePacketSize(event: ProtocolPacketEvent): Int {
+        return ByteBufHelper.readableBytes(event.byteBuf);
+    }
 
     fun handlePacketSend(event: PacketSendEvent) {
-        sendEvents.add(event)
+        sendEvents.add(
+            Packet(
+                type = event.packetType.name,
+                timestamp = event.timestamp,
+                size = calculatePacketSize(event)
+            )
+        )
     }
 
     fun handlePacketReceive(event: PacketReceiveEvent) {
-        receiveEvents.add(event)
-    }
-
-    private suspend fun calculatePackets(): PacketConfig = withContext(Dispatchers.Default) {
-        val sentPackets = sendEvents.mapTo(mutableObjectListOf(1_000_000)) {
+        receiveEvents.add(
             Packet(
-                type = it.packetType.name,
-                timestamp = it.timestamp
+                type = event.packetType.name,
+                timestamp = event.timestamp,
+                size = calculatePacketSize(event)
             )
-        }
-
-        val receivedPackets = receiveEvents.mapTo(mutableObjectListOf(1_000_000)) {
-            Packet(
-                type = it.packetType.name,
-                timestamp = it.timestamp
-            )
-        }
-
-        return@withContext PacketConfig(
-            sentPackets = sentPackets,
-            receivedPackets = receivedPackets,
         )
     }
 
     suspend fun savePacketsToFile() {
-        val config = calculatePackets()
+        val config = PacketConfig(
+            receivedPackets = receiveEvents,
+            sentPackets = sendEvents
+        )
+        
         val file = PacketLoggerInstance.dataPath.resolve(PacketConfig.generateConfigName())
 
         withContext(Dispatchers.IO) {

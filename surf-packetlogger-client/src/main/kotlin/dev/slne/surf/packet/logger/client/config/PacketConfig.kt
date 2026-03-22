@@ -5,8 +5,8 @@ import java.time.OffsetDateTime
 
 @Serializable
 data class PacketConfig(
-    val receivedPackets: MutableList<Packet>,
-    val sentPackets: MutableList<Packet>
+    val receivedPackets: MutableSet<Packet>,
+    val sentPackets: MutableSet<Packet>
 ) {
     companion object {
         fun generateConfigName(): String {
