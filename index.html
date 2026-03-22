@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Packet Logger</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0f1117;
+    color: #e0e0e0;
+    min-height: 100vh;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: #161822;
+    border-bottom: 1px solid #2a2d3a;
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .header-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  select, button {
+    background: #1e2030;
+    color: #e0e0e0;
+    border: 1px solid #3a3d4a;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color .2s;
+  }
+  select:hover, button:hover { border-color: #6c7ae0; }
+  button.primary {
+    background: #6c7ae0;
+    border-color: #6c7ae0;
+    color: #fff;
+    font-weight: 600;
+  }
+  button.primary:hover { background: #5a68d0; }
+
+  .upload-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: calc(100vh - 65px);
+    gap: 16px;
+  }
+  .upload-zone .drop-area {
+    border: 2px dashed #3a3d4a;
+    border-radius: 12px;
+    padding: 60px 80px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+  .upload-zone .drop-area:hover,
+  .upload-zone .drop-area.dragover {
+    border-color: #6c7ae0;
+    background: rgba(108, 122, 224, 0.06);
+  }
+  .drop-area h2 { font-size: 18px; margin-bottom: 8px; color: #aaa; font-weight: 500; }
+  .drop-area p { font-size: 13px; color: #666; }
+
+  .stats-bar {
+    display: flex;
+    gap: 24px;
+    padding: 12px 24px;
+    background: #161822;
+    border-bottom: 1px solid #2a2d3a;
+    font-size: 13px;
+  }
+  .stats-bar .stat { display: flex; gap: 6px; }
+  .stats-bar .stat-label { color: #888; }
+  .stats-bar .stat-value { color: #fff; font-weight: 600; }
+
+  .main-content {
+    display: none;
+    flex-direction: column;
+    height: calc(100vh - 65px);
+  }
+  .main-content.visible { display: flex; }
+
+  .chart-wrapper {
+    flex: 1;
+    padding: 16px 24px;
+    min-height: 0;
+    position: relative;
+  }
+  .chart-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .legend-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding: 12px 24px;
+    background: #161822;
+    border-top: 1px solid #2a2d3a;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    user-select: none;
+    opacity: 1;
+    transition: opacity .2s;
+  }
+  .legend-item.hidden { opacity: 0.3; }
+  .legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .custom-tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: #1e2030;
+    border: 1px solid #3a3d4a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    display: none;
+  }
+  .custom-tooltip .tt-title {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #fff;
+    font-size: 13px;
+  }
+  .custom-tooltip .tt-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 1px 0;
+  }
+  .custom-tooltip .tt-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .custom-tooltip .tt-label { color: #ccc; }
+  .custom-tooltip .tt-value { margin-left: auto; color: #fff; font-weight: 600; padding-left: 12px; }
+  .custom-tooltip .tt-total {
+    border-top: 1px solid #3a3d4a;
+    margin-top: 6px;
+    padding-top: 6px;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  #fileInput { display: none; }
+
+  .interval-info { font-size: 12px; color: #666; }
+
+  .tabs {
+    display: flex;
+    gap: 0;
+    padding: 0 24px;
+    background: #161822;
+    border-bottom: 1px solid #2a2d3a;
+  }
+  .tab {
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #888;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color .2s, border-color .2s;
+    user-select: none;
+  }
+  .tab:hover { color: #ccc; }
+  .tab.active { color: #fff; border-bottom-color: #6c7ae0; }
+
+  .time-range-bar {
+    padding: 10px 24px 14px;
+    background: #161822;
+    border-bottom: 1px solid #2a2d3a;
+  }
+  .time-range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .time-range-labels .tr-start { color: #6c7ae0; }
+  .time-range-labels .tr-end { color: #6c7ae0; }
+  .time-range-labels .tr-full { color: #555; }
+  .time-range-slider {
+    position: relative;
+    height: 28px;
+    width: 100%;
+  }
+  .time-range-slider input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    position: absolute;
+    width: 100%;
+    height: 6px;
+    background: transparent;
+    pointer-events: none;
+    top: 10px;
+    margin: 0;
+  }
+  .time-range-slider input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    background: #6c7ae0;
+    cursor: pointer;
+    pointer-events: all;
+    border: 2px solid #0f1117;
+    position: relative;
+    z-index: 2;
+  }
+  .time-range-slider input[type=range]::-moz-range-thumb {
+    height: 18px;
+    width: 18px;
+    border-radius: 50%;
+    background: #6c7ae0;
+    cursor: pointer;
+    pointer-events: all;
+    border: 2px solid #0f1117;
+  }
+  .time-range-track {
+    position: absolute;
+    height: 6px;
+    top: 10px;
+    background: #2a2d3a;
+    width: 100%;
+    border-radius: 3px;
+  }
+  .time-range-track .tr-fill {
+    position: absolute;
+    height: 100%;
+    background: #6c7ae0;
+    border-radius: 3px;
+  }
+  .time-range-reset {
+    font-size: 11px;
+    color: #6c7ae0;
+    cursor: pointer;
+    margin-left: 12px;
+  }
+  .time-range-reset:hover { text-decoration: underline; }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal {
+    background: #1e2030;
+    border: 1px solid #3a3d4a;
+    border-radius: 12px;
+    padding: 20px 24px;
+    min-width: 360px;
+    max-width: 520px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .modal-header h3 {
+    font-size: 15px;
+    color: #fff;
+    font-weight: 600;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+  }
+  .modal-close:hover { color: #fff; }
+  .modal-body {
+    overflow-y: auto;
+    flex: 1;
+  }
+  .modal-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 0;
+    font-size: 13px;
+  }
+  .modal-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .modal-label { color: #ccc; }
+  .modal-value { margin-left: auto; color: #fff; font-weight: 600; }
+  .modal-total {
+    border-top: 1px solid #3a3d4a;
+    margin-top: 8px;
+    padding-top: 8px;
+    font-weight: 600;
+    color: #fff;
+    font-size: 14px;
+    text-align: right;
+  }
+
+  .chart-wrapper canvas { cursor: crosshair; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Packet Logger</h1>
+  <div class="header-controls">
+    <select id="sortMode">
+      <option value="count">Sort by Packet Count</option>
+      <option value="name">Sort by Name</option>
+    </select>
+    <select id="intervalMode">
+      <option value="50">Per 50ms</option>
+      <option value="100">Per 100ms</option>
+      <option value="250">Per 250ms</option>
+      <option value="500">Per 500ms</option>
+      <option value="1000">Per 1s</option>
+      <option value="5000">Per 5s</option>
+      <option value="10000">Per 10s</option>
+      <option value="30000">Per 30s</option>
+      <option value="60000" selected>Per Minute</option>
+      <option value="300000">Per 5 Minutes</option>
+    </select>
+    <select id="maxTypes">
+      <option value="15">Top 15 Types</option>
+      <option value="25" selected>Top 25 Types</option>
+      <option value="40">Top 40 Types</option>
+      <option value="0">All Types</option>
+    </select>
+    <button class="primary" id="loadBtn">JSON laden</button>
+    <input type="file" id="fileInput" accept=".json">
+  </div>
+</div>
+
+<div class="upload-zone" id="uploadZone">
+  <div class="drop-area" id="dropArea">
+    <h2>JSON Datei hierher ziehen</h2>
+    <p>oder klicken zum Auswählen</p>
+  </div>
+</div>
+
+<div class="main-content" id="mainContent">
+  <div class="tabs" id="directionTabs"></div>
+  <div class="time-range-bar" id="timeRangeBar" style="display:none">
+    <div class="time-range-labels">
+      <span class="tr-full" id="trFullStart"></span>
+      <span><span class="tr-start" id="trSelStart"></span> &mdash; <span class="tr-end" id="trSelEnd"></span><span class="time-range-reset" id="trReset">Reset</span></span>
+      <span class="tr-full" id="trFullEnd"></span>
+    </div>
+    <div class="time-range-slider">
+      <div class="time-range-track"><div class="tr-fill" id="trFill"></div></div>
+      <input type="range" id="trMin" min="0" max="1000" value="0">
+      <input type="range" id="trMax" min="0" max="1000" value="1000">
+    </div>
+  </div>
+  <div class="stats-bar" id="statsBar"></div>
+  <div class="chart-wrapper">
+    <canvas id="chart"></canvas>
+    <div class="custom-tooltip" id="tooltip"></div>
+  </div>
+  <div class="legend-panel" id="legend"></div>
+  <div id="modalContainer"></div>
+</div>
+
+<script>
+(function() {
+  // ── Color palette (distinct, readable on dark bg) ──
+  const COLORS = [
+    '#f4a261','#e76f51','#2a9d8f','#264653','#e9c46a',
+    '#6c7ae0','#ef476f','#06d6a0','#118ab2','#ffd166',
+    '#8338ec','#ff6b6b','#48bfe3','#72efdd','#f77f00',
+    '#d62828','#90be6d','#577590','#f94144','#43aa8b',
+    '#f3722c','#f8961e','#9b5de5','#00bbf9','#fee440',
+    '#00f5d4','#e07a5f','#3d405b','#81b29a','#f2cc8f',
+    '#a8dadc','#457b9d','#1d3557','#e63946','#ffb4a2',
+    '#b5838d','#6d6875','#cdb4db','#ffc8dd','#bde0fe',
+  ];
+
+  let rawData = [];
+  let allDirections = {};  // key -> packet array
+  let activeDirection = 'all';
+  let chart = null;
+  let hiddenTypes = new Set();
+  let globalMinTs = 0, globalMaxTs = 0;
+  let filterMinTs = null, filterMaxTs = null;  // null = use full range
+  let expandOther = false;
+  let lastTooltipData = null;  // store for modal
+  let highlightedBarIndex = null;  // index of clicked bar
+  let mouseX = 0, mouseY = 0;  // real mouse position relative to chart wrapper
+
+  // ── DOM ──
+  const fileInput = document.getElementById('fileInput');
+  const loadBtn = document.getElementById('loadBtn');
+  const dropArea = document.getElementById('dropArea');
+  const uploadZone = document.getElementById('uploadZone');
+  const mainContent = document.getElementById('mainContent');
+  const statsBar = document.getElementById('statsBar');
+  const legendEl = document.getElementById('legend');
+  const tooltipEl = document.getElementById('tooltip');
+  const modalContainer = document.getElementById('modalContainer');
+  const directionTabs = document.getElementById('directionTabs');
+  const timeRangeBar = document.getElementById('timeRangeBar');
+  const trMin = document.getElementById('trMin');
+  const trMax = document.getElementById('trMax');
+  const trFill = document.getElementById('trFill');
+  const trFullStart = document.getElementById('trFullStart');
+  const trFullEnd = document.getElementById('trFullEnd');
+  const trSelStart = document.getElementById('trSelStart');
+  const trSelEnd = document.getElementById('trSelEnd');
+  const trReset = document.getElementById('trReset');
+  const sortMode = document.getElementById('sortMode');
+  const intervalMode = document.getElementById('intervalMode');
+  const maxTypesSelect = document.getElementById('maxTypes');
+
+  loadBtn.addEventListener('click', () => fileInput.click());
+  dropArea.addEventListener('click', () => fileInput.click());
+
+  // Track real mouse position for tooltip
+  document.querySelector('.chart-wrapper').addEventListener('mousemove', (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+  });
+
+  dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('dragover'); });
+  dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+  dropArea.addEventListener('drop', e => {
+    e.preventDefault();
+    dropArea.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) readFile(file);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) readFile(fileInput.files[0]);
+  });
+
+  sortMode.addEventListener('change', () => { if (rawData.length) render(); });
+  intervalMode.addEventListener('change', () => { if (rawData.length) render(); });
+  maxTypesSelect.addEventListener('change', () => { if (rawData.length) render(); });
+
+  // ── Debounce slider for performance ──
+  let sliderRafId = null;
+  function onSliderInput() {
+    const lo = Math.min(+trMin.value, +trMax.value);
+    const hi = Math.max(+trMin.value, +trMax.value);
+    filterMinTs = globalMinTs + (lo / 1000) * (globalMaxTs - globalMinTs);
+    filterMaxTs = globalMinTs + (hi / 1000) * (globalMaxTs - globalMinTs);
+    updateSliderUI();
+    if (sliderRafId) cancelAnimationFrame(sliderRafId);
+    sliderRafId = requestAnimationFrame(() => { sliderRafId = null; render(); });
+  }
+  trMin.addEventListener('input', onSliderInput);
+  trMax.addEventListener('input', onSliderInput);
+  trReset.addEventListener('click', () => {
+    filterMinTs = null;
+    filterMaxTs = null;
+    trMin.value = 0;
+    trMax.value = 1000;
+    updateSliderUI();
+    render();
+  });
+
+  function updateSliderUI() {
+    const lo = Math.min(+trMin.value, +trMax.value);
+    const hi = Math.max(+trMin.value, +trMax.value);
+    trFill.style.left = (lo / 10) + '%';
+    trFill.style.width = ((hi - lo) / 10) + '%';
+    const selStart = filterMinTs != null ? filterMinTs : globalMinTs;
+    const selEnd = filterMaxTs != null ? filterMaxTs : globalMaxTs;
+    trSelStart.textContent = formatDateTime(selStart);
+    trSelEnd.textContent = formatDateTime(selEnd);
+  }
+
+  function initTimeRange() {
+    // Compute global min/max from ALL data
+    globalMinTs = Infinity; globalMaxTs = -Infinity;
+    for (const p of rawData) {
+      if (p.timestamp < globalMinTs) globalMinTs = p.timestamp;
+      if (p.timestamp > globalMaxTs) globalMaxTs = p.timestamp;
+    }
+    filterMinTs = null;
+    filterMaxTs = null;
+    trMin.value = 0;
+    trMax.value = 1000;
+    trFullStart.textContent = formatDateTime(globalMinTs);
+    trFullEnd.textContent = formatDateTime(globalMaxTs);
+    updateSliderUI();
+    timeRangeBar.style.display = '';
+  }
+
+  function formatDateTime(ts) {
+    const d = new Date(ts);
+    const D = String(d.getDate()).padStart(2, '0');
+    const M = String(d.getMonth() + 1).padStart(2, '0');
+    const Y = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    const ss = String(d.getSeconds()).padStart(2, '0');
+    return `${D}.${M}.${Y} ${hh}:${mm}:${ss}`;
+  }
+
+  function readFile(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const text = e.target.result;
+      let parsed;
+      try {
+        parsed = JSON.parse(text);
+      } catch (err) {
+        alert('Fehler beim Parsen: ' + err.message);
+        return;
+      }
+      rawData = extractPackets(parsed);
+      if (!rawData.length) return alert('Datei enth\u00e4lt keine Paketdaten.');
+      // Sort all direction arrays by timestamp for binary search
+      for (const key of Object.keys(allDirections)) {
+        allDirections[key].sort((a, b) => a.timestamp - b.timestamp);
+      }
+      rawData.sort((a, b) => a.timestamp - b.timestamp);
+      initTimeRange();
+      buildDirectionTabs();
+      hiddenTypes.clear();
+      uploadZone.style.display = 'none';
+      mainContent.classList.add('visible');
+      render();
+    };
+    reader.readAsText(file);
+  }
+
+  function extractPackets(parsed) {
+    allDirections = {};
+    if (Array.isArray(parsed)) {
+      allDirections['all'] = parsed;
+      return parsed;
+    }
+    // Support: packets, receivedPackets, sentPackets
+    const keyMap = {
+      'packets': 'All Packets',
+      'receivedPackets': 'Received',
+      'sentPackets': 'Sent',
+    };
+    let all = [];
+    for (const [key, label] of Object.entries(keyMap)) {
+      if (parsed[key] && Array.isArray(parsed[key])) {
+        allDirections[key] = parsed[key];
+        all = all.concat(parsed[key]);
+      }
+    }
+    if (!all.length && parsed.packets && Array.isArray(parsed.packets)) {
+      all = parsed.packets;
+    }
+    if (all.length) allDirections['all'] = all;
+    return all;
+  }
+
+  function buildDirectionTabs() {
+    directionTabs.innerHTML = '';
+    const keys = Object.keys(allDirections);
+    if (keys.length <= 1 && keys[0] === 'all') {
+      directionTabs.style.display = 'none';
+      activeDirection = 'all';
+      return;
+    }
+    directionTabs.style.display = 'flex';
+    const labels = {
+      'all': 'All',
+      'packets': 'All Packets',
+      'receivedPackets': 'Received',
+      'sentPackets': 'Sent',
+    };
+    // Ensure 'all' is always first if both received+sent exist
+    const order = ['all', 'receivedPackets', 'sentPackets', 'packets'];
+    const toShow = order.filter(k => allDirections[k]);
+    // Don't show 'all' and 'packets' together (redundant)
+    const final = toShow.filter(k => !(k === 'packets' && allDirections['all'] && toShow.includes('all') && toShow.length > 2));
+    if (!final.includes(activeDirection)) activeDirection = final[0];
+    for (const key of final) {
+      const tab = document.createElement('div');
+      tab.className = 'tab' + (key === activeDirection ? ' active' : '');
+      tab.textContent = (labels[key] || key) + ` (${allDirections[key].length.toLocaleString()})`;
+      tab.addEventListener('click', () => {
+        activeDirection = key;
+        hiddenTypes.clear();
+        render();
+        buildDirectionTabs();
+      });
+      directionTabs.appendChild(tab);
+    }
+  }
+
+  // ── Binary search helpers (data must be sorted by timestamp) ──
+  function lowerBound(arr, ts) {
+    let lo = 0, hi = arr.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1;
+      if (arr[mid].timestamp < ts) lo = mid + 1; else hi = mid;
+    }
+    return lo;
+  }
+  function upperBound(arr, ts) {
+    let lo = 0, hi = arr.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1;
+      if (arr[mid].timestamp <= ts) lo = mid + 1; else hi = mid;
+    }
+    return lo;
+  }
+
+  const MAX_BUCKETS = 2000;
+
+  function render() {
+    const interval = parseInt(intervalMode.value);
+    const sort = sortMode.value;
+    const fullData = allDirections[activeDirection] || rawData;
+
+    // ── Apply time filter via binary search (O(log n)) ──
+    const fMin = filterMinTs != null ? filterMinTs : globalMinTs;
+    const fMax = filterMaxTs != null ? filterMaxTs : globalMaxTs;
+    const iStart = lowerBound(fullData, fMin);
+    const iEnd = upperBound(fullData, fMax);
+    // Work with slice indices, avoid copying when possible
+    const dataLen = iEnd - iStart;
+
+    // ── Bucket by interval ──
+    const bucketStart = Math.floor(fMin / interval) * interval;
+    const bucketEnd = Math.ceil((fMax + 1) / interval) * interval;
+    let numBuckets = Math.ceil((bucketEnd - bucketStart) / interval);
+
+    // Cap buckets — if too many, show warning
+    let effectiveInterval = interval;
+    let bucketWarning = '';
+    if (numBuckets > MAX_BUCKETS) {
+      effectiveInterval = Math.ceil((bucketEnd - bucketStart) / MAX_BUCKETS);
+      numBuckets = Math.ceil((bucketEnd - bucketStart) / effectiveInterval);
+      bucketWarning = ` (auto: ${effectiveInterval >= 1000 ? (effectiveInterval/1000).toFixed(1)+'s' : effectiveInterval+'ms'})`;
+    }
+    const eBucketStart = Math.floor(fMin / effectiveInterval) * effectiveInterval;
+
+    const labels = new Array(numBuckets);
+    for (let i = 0; i < numBuckets; i++) {
+      labels[i] = formatTime(eBucketStart + i * effectiveInterval, effectiveInterval);
+    }
+
+    // ── Count per type per bucket (sparse → dense) ──
+    const typeCounts = {};  // type -> total
+    const sparseBuckets = {};  // type -> Map(bucketIdx -> count)
+
+    for (let i = iStart; i < iEnd; i++) {
+      const pkt = fullData[i];
+      const type = pkt.type || 'UNKNOWN';
+      if (!typeCounts[type]) {
+        typeCounts[type] = 0;
+        sparseBuckets[type] = new Map();
+      }
+      typeCounts[type]++;
+      const idx = Math.floor((pkt.timestamp - eBucketStart) / effectiveInterval);
+      if (idx >= 0 && idx < numBuckets) {
+        sparseBuckets[type].set(idx, (sparseBuckets[type].get(idx) || 0) + 1);
+      }
+    }
+
+    // ── Sort types ──
+    let allTypes = Object.keys(typeCounts);
+    allTypes.sort((a, b) => typeCounts[b] - typeCounts[a]);
+
+    // ── Group rare types into OTHER ──
+    const maxTypes = parseInt(maxTypesSelect.value) || allTypes.length;
+    let types, otherTypes = [];
+    if (maxTypes > 0 && allTypes.length > maxTypes) {
+      otherTypes = allTypes.slice(maxTypes);
+      if (expandOther) {
+        types = allTypes.slice();
+      } else {
+        types = allTypes.slice(0, maxTypes);
+        typeCounts['OTHER'] = 0;
+        sparseBuckets['OTHER'] = new Map();
+        for (const ot of otherTypes) {
+          typeCounts['OTHER'] += typeCounts[ot];
+          for (const [idx, cnt] of sparseBuckets[ot]) {
+            sparseBuckets['OTHER'].set(idx, (sparseBuckets['OTHER'].get(idx) || 0) + cnt);
+          }
+        }
+        types.push('OTHER');
+      }
+    } else {
+      types = allTypes;
+    }
+
+    if (sort === 'name') {
+      const otherAtEnd = types.filter(t => t !== 'OTHER');
+      otherAtEnd.sort((a, b) => a.localeCompare(b));
+      if (types.includes('OTHER')) otherAtEnd.push('OTHER');
+      types = otherAtEnd;
+    }
+
+    // ── Assign colors ──
+    const colorMap = {};
+    types.forEach((t, i) => {
+      if (t === 'OTHER') colorMap[t] = '#555';
+      else colorMap[t] = COLORS[i % COLORS.length];
+    });
+
+    // ── Stats bar ──
+    const totalPackets = dataLen;
+    const uniqueTypes = allTypes.length;
+    const durationSec = ((fMax - fMin) / 1000).toFixed(0);
+    const durationMin = (durationSec / 60).toFixed(1);
+    statsBar.innerHTML = `
+      <div class="stat"><span class="stat-label">Total Packets:</span><span class="stat-value">${totalPackets.toLocaleString()}</span></div>
+      <div class="stat"><span class="stat-label">Packet Types:</span><span class="stat-value">${uniqueTypes}</span></div>
+      <div class="stat"><span class="stat-label">Start:</span><span class="stat-value">${formatDateTime(fMin)}</span></div>
+      <div class="stat"><span class="stat-label">End:</span><span class="stat-value">${formatDateTime(fMax)}</span></div>
+      <div class="stat"><span class="stat-label">Duration:</span><span class="stat-value">${durationMin} min</span></div>
+      <div class="stat"><span class="stat-label">Buckets:</span><span class="stat-value">${numBuckets.toLocaleString()}${bucketWarning}</span></div>
+    `;
+
+    // ── Legend ──
+    legendEl.innerHTML = '';
+    for (const type of types) {
+      if (type === 'OTHER') {
+        // OTHER with expand toggle
+        const item = document.createElement('div');
+        item.className = 'legend-item' + (hiddenTypes.has(type) ? ' hidden' : '');
+        item.innerHTML = `<div class="legend-swatch" style="background:${colorMap[type]}"></div><span>OTHER (${typeCounts[type].toLocaleString()})</span>`;
+        item.style.cursor = 'pointer';
+        item.addEventListener('click', (e) => {
+          if (e.shiftKey || e.ctrlKey) {
+            // Shift/Ctrl+Click = expand/collapse
+            expandOther = true;
+            render();
+          } else {
+            if (hiddenTypes.has(type)) hiddenTypes.delete(type);
+            else hiddenTypes.add(type);
+            render();
+          }
+        });
+        // Add expand button
+        const expandBtn = document.createElement('span');
+        expandBtn.textContent = ' ▶';
+        expandBtn.title = 'Aufsplitten (Other aufklappen)';
+        expandBtn.style.cssText = 'color:#6c7ae0;cursor:pointer;font-size:10px;margin-left:4px;';
+        expandBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          expandOther = true;
+          render();
+        });
+        item.appendChild(expandBtn);
+        legendEl.appendChild(item);
+      } else if (expandOther && otherTypes.includes(type)) {
+        // Expanded OTHER sub-items
+        const item = document.createElement('div');
+        item.className = 'legend-item' + (hiddenTypes.has(type) ? ' hidden' : '');
+        item.style.paddingLeft = '8px';
+        item.style.borderLeft = '2px solid #555';
+        item.innerHTML = `<div class="legend-swatch" style="background:${colorMap[type]}"></div><span>${type} (${typeCounts[type].toLocaleString()})</span>`;
+        item.addEventListener('click', () => {
+          if (hiddenTypes.has(type)) hiddenTypes.delete(type);
+          else hiddenTypes.add(type);
+          render();
+        });
+        legendEl.appendChild(item);
+      } else {
+        const item = document.createElement('div');
+        item.className = 'legend-item' + (hiddenTypes.has(type) ? ' hidden' : '');
+        item.innerHTML = `<div class="legend-swatch" style="background:${colorMap[type]}"></div><span>${type} (${typeCounts[type].toLocaleString()})</span>`;
+        item.addEventListener('click', () => {
+          if (hiddenTypes.has(type)) hiddenTypes.delete(type);
+          else hiddenTypes.add(type);
+          render();
+        });
+        legendEl.appendChild(item);
+      }
+    }
+    // Collapse button if expanded
+    if (expandOther && otherTypes.length) {
+      const collapseBtn = document.createElement('div');
+      collapseBtn.className = 'legend-item';
+      collapseBtn.style.cssText = 'color:#6c7ae0;font-size:11px;cursor:pointer;';
+      collapseBtn.innerHTML = '◀ Other zusammenklappen';
+      collapseBtn.addEventListener('click', () => {
+        expandOther = false;
+        render();
+      });
+      legendEl.appendChild(collapseBtn);
+    }
+
+    // ── Chart datasets (sparse → dense only for visible types) ──
+    const datasets = types.filter(t => !hiddenTypes.has(t)).map(type => {
+      const sparse = sparseBuckets[type];
+      let arr;
+      if (sparse.size < numBuckets * 0.3) {
+        // Sparse: use typed array, fill only set entries
+        arr = new Float64Array(numBuckets);
+        for (const [idx, cnt] of sparse) arr[idx] = cnt;
+      } else {
+        arr = new Float64Array(numBuckets);
+        for (const [idx, cnt] of sparse) arr[idx] = cnt;
+      }
+      return {
+        label: type,
+        data: arr,
+        backgroundColor: colorMap[type],
+        borderWidth: 0,
+        barPercentage: 1.0,
+        categoryPercentage: 0.92,
+      };
+    });
+
+    // ── Chart ──
+    if (chart) chart.destroy();
+    const ctx = document.getElementById('chart').getContext('2d');
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets },
+      plugins: [highlightPlugin, dragSelectPlugin],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: numBuckets > 200 ? false : { duration: 300 },
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false, external: externalTooltip },
+        },
+        scales: {
+          x: {
+            stacked: true,
+            ticks: { color: '#888', maxRotation: 90, font: { size: 10 } },
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            title: { display: true, text: intervalLabel(), color: '#888' },
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true,
+            ticks: { color: '#888' },
+            grid: { color: 'rgba(255,255,255,0.06)' },
+            title: { display: true, text: 'Total Packets', color: '#888' },
+          },
+        },
+        interaction: { mode: 'index', intersect: false },
+      },
+    });
+  }
+
+  function intervalLabel() {
+    const v = intervalMode.value;
+    const map = {
+      '50': 'Time (50ms)', '100': 'Time (100ms)', '250': 'Time (250ms)',
+      '500': 'Time (500ms)', '1000': 'Time (1s)', '5000': 'Time (5s)',
+      '10000': 'Time (10s)', '30000': 'Time (30s)',
+      '60000': 'Time (Minute)', '300000': 'Time (5 Min)',
+    };
+    return map[v] || 'Time';
+  }
+
+  function formatTime(ts, interval) {
+    const d = new Date(ts);
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    const ss = String(d.getSeconds()).padStart(2, '0');
+    const ms = String(d.getMilliseconds()).padStart(3, '0');
+    if (interval < 1000) return `${hh}:${mm}:${ss}.${ms}`;
+    if (interval < 60000) return `${hh}:${mm}:${ss}`;
+    const D = String(d.getDate()).padStart(2, '0');
+    const M = String(d.getMonth() + 1).padStart(2, '0');
+    const Y = d.getFullYear();
+    return `${D}.${M}.${Y} ${hh}:${mm}`;
+  }
+
+  function externalTooltip(context) {
+    const { chart, tooltip } = context;
+    if (tooltip.opacity === 0) {
+      tooltipEl.style.display = 'none';
+      return;
+    }
+
+    const idx = tooltip.dataPoints?.[0]?.dataIndex;
+    if (idx == null) return;
+
+    const items = tooltip.dataPoints
+      .filter(dp => dp.raw > 0)
+      .sort((a, b) => b.raw - a.raw);
+
+    const total = items.reduce((s, dp) => s + dp.raw, 0);
+    const MAX_TOOLTIP_ROWS = 15;
+    const visible = items.slice(0, MAX_TOOLTIP_ROWS);
+    const remaining = items.slice(MAX_TOOLTIP_ROWS);
+    const remainingSum = remaining.reduce((s, dp) => s + dp.raw, 0);
+
+    let html = `<div class="tt-title">${tooltip.title[0]}</div>`;
+    for (const dp of visible) {
+      const color = dp.dataset.backgroundColor;
+      html += `<div class="tt-row">
+        <div class="tt-swatch" style="background:${sanitize(color)}"></div>
+        <span class="tt-label">${sanitize(dp.dataset.label)}</span>
+        <span class="tt-value">${dp.raw.toLocaleString()}</span>
+      </div>`;
+    }
+    if (remaining.length) {
+      html += `<div class="tt-row" style="color:#6c7ae0;cursor:pointer;font-style:italic" class="tt-expand">
+        <span class="tt-label">... +${remaining.length} weitere — Klick für Details</span>
+        <span class="tt-value">${remainingSum.toLocaleString()}</span>
+      </div>`;
+    }
+    html += `<div class="tt-total">Total: ${total.toLocaleString()}</div>`;
+
+    // Store data for modal
+    lastTooltipData = { title: tooltip.title[0], items, total };
+
+    tooltipEl.innerHTML = html;
+    tooltipEl.style.display = 'block';
+
+    const wrapRect = chart.canvas.parentElement.getBoundingClientRect();
+    const ttW = tooltipEl.offsetWidth;
+    const ttH = tooltipEl.offsetHeight;
+    const pad = 8;
+    // Always position below-right of real cursor
+    let left = mouseX + 20;
+    let top = mouseY + 20;
+    // If overflows right, flip to left of cursor
+    if (left + ttW > wrapRect.width - pad) {
+      left = mouseX - ttW - 20;
+    }
+    // If overflows bottom, flip above cursor
+    if (top + ttH > wrapRect.height - pad) {
+      top = mouseY - ttH - 20;
+    }
+    left = Math.max(pad, left);
+    top = Math.max(pad, top);
+    tooltipEl.style.left = left + 'px';
+    tooltipEl.style.top = top + 'px';
+  }
+
+  function sanitize(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ── Drag-to-zoom state ──
+  let dragState = null; // { startX, currentX }
+
+  // ── Custom plugin: draw drag selection rectangle ──
+  const dragSelectPlugin = {
+    id: 'dragSelect',
+    afterDraw(ch) {
+      if (!dragState) return;
+      const { startX, currentX } = dragState;
+      const xScale = ch.scales.x;
+      const yScale = ch.scales.y;
+      const x1 = Math.max(xScale.left, Math.min(startX, currentX));
+      const x2 = Math.min(xScale.right, Math.max(startX, currentX));
+      const ctx = ch.ctx;
+      ctx.save();
+      ctx.fillStyle = 'rgba(108, 122, 224, 0.18)';
+      ctx.fillRect(x1, yScale.top, x2 - x1, yScale.bottom - yScale.top);
+      ctx.strokeStyle = '#6c7ae0';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 3]);
+      ctx.strokeRect(x1, yScale.top, x2 - x1, yScale.bottom - yScale.top);
+      ctx.restore();
+    }
+  };
+
+  // ── Custom plugin: highlight a selected bar column ──
+  const highlightPlugin = {
+    id: 'barHighlight',
+    afterDatasetsDraw(ch) {
+      if (highlightedBarIndex == null) return;
+      const meta = ch.getDatasetMeta(0);
+      if (!meta || !meta.data[highlightedBarIndex]) return;
+      const bar = meta.data[highlightedBarIndex];
+      const xScale = ch.scales.x;
+      const yScale = ch.scales.y;
+      // Get full column x range from the bar width
+      const barWidth = bar.width / (bar.options?.barPercentage || 1) / (bar.options?.categoryPercentage || 1);
+      const x = bar.x - barWidth / 2 - 1;
+      const w = barWidth + 2;
+      const ctx = ch.ctx;
+      ctx.save();
+      ctx.fillStyle = 'rgba(108, 122, 224, 0.12)';
+      ctx.fillRect(x, yScale.top, w, yScale.bottom - yScale.top);
+      ctx.strokeStyle = '#6c7ae0';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.strokeRect(x, yScale.top, w, yScale.bottom - yScale.top);
+      ctx.restore();
+    }
+  };
+
+  // ── Drag-to-zoom + Click on chart bar ──
+  const chartCanvas = document.getElementById('chart');
+  let dragStartX = null;
+  const DRAG_THRESHOLD = 8; // min px to count as drag vs click
+
+  chartCanvas.addEventListener('mousedown', (e) => {
+    if (!chart) return;
+    const rect = chartCanvas.getBoundingClientRect();
+    dragStartX = e.clientX - rect.left;
+    dragState = null;
+  });
+
+  chartCanvas.addEventListener('mousemove', (e) => {
+    if (dragStartX == null || !chart) return;
+    const rect = chartCanvas.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    if (Math.abs(currentX - dragStartX) > DRAG_THRESHOLD) {
+      dragState = { startX: dragStartX, currentX };
+      // Hide tooltip during drag
+      tooltipEl.style.display = 'none';
+      chart.draw();
+    }
+  });
+
+  chartCanvas.addEventListener('mouseup', (e) => {
+    if (!chart) { dragStartX = null; dragState = null; return; }
+    const rect = chartCanvas.getBoundingClientRect();
+    const endX = e.clientX - rect.left;
+
+    if (dragState && Math.abs(endX - dragStartX) > DRAG_THRESHOLD) {
+      // Drag completed → zoom to selection
+      const xScale = chart.scales.x;
+      const x1 = Math.min(dragStartX, endX);
+      const x2 = Math.max(dragStartX, endX);
+
+      // Use getValueForPixel to map pixel → label index (works regardless of tick filtering)
+      const numLabels = chart.data.labels.length;
+      let minIdx = Math.round(xScale.getValueForPixel(x1));
+      let maxIdx = Math.round(xScale.getValueForPixel(x2));
+      minIdx = Math.max(0, Math.min(minIdx, numLabels - 1));
+      maxIdx = Math.max(0, Math.min(maxIdx, numLabels - 1));
+
+      if (minIdx <= maxIdx) {
+        // Recalculate effectiveInterval to match what render() used
+        const interval = parseInt(intervalMode.value);
+        const fMin = filterMinTs != null ? filterMinTs : globalMinTs;
+        const fMax = filterMaxTs != null ? filterMaxTs : globalMaxTs;
+        let effectiveInterval = interval;
+        const bucketEnd = Math.ceil((fMax + 1) / interval) * interval;
+        const bucketStart = Math.floor(fMin / interval) * interval;
+        let numBuckets = Math.ceil((bucketEnd - bucketStart) / interval);
+        if (numBuckets > MAX_BUCKETS) {
+          effectiveInterval = Math.ceil((bucketEnd - bucketStart) / MAX_BUCKETS);
+        }
+        const eBucketStart = Math.floor(fMin / effectiveInterval) * effectiveInterval;
+
+        const newMin = eBucketStart + minIdx * effectiveInterval;
+        const newMax = eBucketStart + (maxIdx + 1) * effectiveInterval;
+
+        filterMinTs = Math.max(globalMinTs, newMin);
+        filterMaxTs = Math.min(globalMaxTs, newMax);
+
+        // Update sliders
+        const range = globalMaxTs - globalMinTs;
+        if (range > 0) {
+          trMin.value = Math.round(((filterMinTs - globalMinTs) / range) * 1000);
+          trMax.value = Math.round(((filterMaxTs - globalMinTs) / range) * 1000);
+        }
+        updateSliderUI();
+        render();
+      }
+    } else if (!dragState) {
+      // Simple click → open modal
+      if (lastTooltipData) {
+        const points = chart.getElementsAtEventForMode(e, 'index', { intersect: false }, false);
+        if (points.length) {
+          highlightedBarIndex = points[0].index;
+          chart.update('none');
+          openDetailModal(lastTooltipData);
+        }
+      }
+    }
+
+    dragStartX = null;
+    dragState = null;
+    if (chart) chart.draw();
+  });
+
+  chartCanvas.addEventListener('mouseleave', () => {
+    dragStartX = null;
+    dragState = null;
+    if (chart) chart.draw();
+  });
+
+  function openDetailModal(data) {
+    const { title, items, total } = data;
+    let rows = '';
+    for (const dp of items) {
+      const color = dp.dataset.backgroundColor;
+      const pct = total > 0 ? ((dp.raw / total) * 100).toFixed(1) : '0.0';
+      rows += `<div class="modal-row">
+        <div class="modal-swatch" style="background:${sanitize(color)}"></div>
+        <span class="modal-label">${sanitize(dp.dataset.label)}</span>
+        <span class="modal-value">${dp.raw.toLocaleString()} <span style="color:#888;font-weight:400">(${pct}%)</span></span>
+      </div>`;
+    }
+    modalContainer.innerHTML = `
+      <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+          <div class="modal-header">
+            <h3>${sanitize(title)}</h3>
+            <button class="modal-close" id="modalClose">&times;</button>
+          </div>
+          <div class="modal-body">${rows}</div>
+          <div class="modal-total">Total: ${total.toLocaleString()}</div>
+        </div>
+      </div>`;
+    document.getElementById('modalOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+  }
+
+  function closeModal() {
+    modalContainer.innerHTML = '';
+  }
+})();
+</script>
+</body>
+</html>
