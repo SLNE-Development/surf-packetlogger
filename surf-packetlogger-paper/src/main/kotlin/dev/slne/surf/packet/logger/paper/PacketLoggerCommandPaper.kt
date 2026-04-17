@@ -5,7 +5,7 @@ import dev.jorel.commandapi.kotlindsl.anyExecutor
 import dev.jorel.commandapi.kotlindsl.commandAPICommand
 import dev.jorel.commandapi.kotlindsl.subcommand
 import dev.slne.surf.packet.logger.client.PacketLogger
-import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
+import dev.slne.surf.api.core.messages.adventure.sendText
 
 fun packetLoggerCommand() = commandAPICommand("packetlogger") {
     withPermission("surf.packetlogger.command")
